@@ -143,7 +143,7 @@ _emit_decode_one (const lcmgen_t *lcm, FILE *f, lcm_struct_t *ls,
     const char *mn = lm->membername;
     const char *sn = lm->type->shortname;
     if (!strcmp ("string", tn)) {
-        emit (indent, "__%s_len = struct.unpack('>I', buf.read(4))[0]", mn);
+        emit (indent, "__%s_len = struct.unpack('<I', buf.read(4))[0]", mn);
         emit (indent, "%sbuf.read(__%s_len)[:-1].decode('utf-8', 'replace')%s",
                 accessor, mn, sfx);
     } else if (!strcmp ("byte", tn)) {
@@ -153,15 +153,15 @@ _emit_decode_one (const lcmgen_t *lcm, FILE *f, lcm_struct_t *ls,
     } else if (!strcmp ("int8_t", tn)) {
         emit (indent, "%sstruct.unpack('b', buf.read(1))[0]%s", accessor, sfx);
     } else if (!strcmp ("int16_t", tn)) {
-        emit (indent, "%sstruct.unpack('>h', buf.read(2))[0]%s", accessor, sfx);
+        emit (indent, "%sstruct.unpack('<h', buf.read(2))[0]%s", accessor, sfx);
     } else if (!strcmp ("int32_t", tn)) {
-        emit (indent, "%sstruct.unpack('>i', buf.read(4))[0]%s", accessor, sfx);
+        emit (indent, "%sstruct.unpack('<i', buf.read(4))[0]%s", accessor, sfx);
     } else if (!strcmp ("int64_t", tn)) {
-        emit (indent, "%sstruct.unpack('>q', buf.read(8))[0]%s", accessor, sfx);
+        emit (indent, "%sstruct.unpack('<q', buf.read(8))[0]%s", accessor, sfx);
     } else if (!strcmp ("float", tn)) {
-        emit (indent, "%sstruct.unpack('>f', buf.read(4))[0]%s", accessor, sfx);
+        emit (indent, "%sstruct.unpack('<f', buf.read(4))[0]%s", accessor, sfx);
     } else if (!strcmp ("double", tn)) {
-        emit (indent, "%sstruct.unpack('>d', buf.read(8))[0]%s", accessor, sfx);
+        emit (indent, "%sstruct.unpack('<d', buf.read(8))[0]%s", accessor, sfx);
     } else {
         if (is_same_type (lm->type, ls->structname)) {
             emit (indent, "%s%s._decode_one(buf)%s", accessor, sn, sfx);
@@ -186,13 +186,13 @@ _emit_decode_list(const lcmgen_t *lcm, FILE *f, lcm_struct_t *ls,
                 accessor, fixed_len ? "":"self.", len, suffix);
     } else if (!strcmp ("boolean", tn)) {
         if(fixed_len) {
-            emit (indent, "%smap(bool, struct.unpack('>%s%c', buf.read(%d)))%s",
+            emit (indent, "%smap(bool, struct.unpack('<%s%c', buf.read(%d)))%s",
                     accessor, len, _struct_format(lm),
                     atoi(len) * _primitive_type_size(tn),
                     suffix);
         } else {
             emit (indent,
-                    "%smap(bool, struct.unpack('>%%d%c' %% self.%s, buf.read(self.%s)))%s",
+                    "%smap(bool, struct.unpack('<%%d%c' %% self.%s, buf.read(self.%s)))%s",
                     accessor, _struct_format(lm), len, len, suffix);
         }
     } else if (!strcmp ("int8_t", tn) || 
@@ -202,19 +202,19 @@ _emit_decode_list(const lcmgen_t *lcm, FILE *f, lcm_struct_t *ls,
                !strcmp ("float", tn) ||
                !strcmp ("double", tn)) {
         if(fixed_len) {
-            emit (indent, "%sstruct.unpack('>%s%c', buf.read(%d))%s", 
+            emit (indent, "%sstruct.unpack('<%s%c', buf.read(%d))%s", 
                     accessor, len, _struct_format(lm), 
                     atoi(len) * _primitive_type_size(tn), 
                     suffix);
         } else {
             if(_primitive_type_size(tn) > 1) {
                 emit (indent, 
-                        "%sstruct.unpack('>%%d%c' %% self.%s, buf.read(self.%s * %d))%s", 
+                        "%sstruct.unpack('<%%d%c' %% self.%s, buf.read(self.%s * %d))%s", 
                         accessor, _struct_format(lm), len, len, 
                         _primitive_type_size(tn), suffix);
             } else {
             emit (indent, 
-                    "%sstruct.unpack('>%%d%c' %% self.%s, buf.read(self.%s))%s", 
+                    "%sstruct.unpack('<%%d%c' %% self.%s, buf.read(self.%s))%s", 
                     accessor, _struct_format(lm), len, len, suffix);
             }
         }
@@ -242,7 +242,7 @@ _flush_read_struct_fmt (const lcmgen_t *lcm, FILE *f,
         }
         fmtsize += _primitive_type_size (lm->type->lctypename);
     }
-    emit_continue (" = struct.unpack(\">");
+    emit_continue (" = struct.unpack(\"<");
     while (! g_queue_is_empty (formats)) {
         emit_continue ("%c", GPOINTER_TO_INT (g_queue_pop_head (formats)));
     }
@@ -372,7 +372,7 @@ _emit_encode_one (const lcmgen_t *lcm, FILE *f, lcm_struct_t *ls,
     const char *mn = lm->membername;
     if (!strcmp ("string", tn)) {
         emit (indent, "__%s_encoded = %s.encode('utf-8')", mn, accessor);
-        emit (indent, "buf.write(struct.pack('>I', len(__%s_encoded)+1))", mn);
+        emit (indent, "buf.write(struct.pack('<I', len(__%s_encoded)+1))", mn);
         emit (indent, "buf.write(__%s_encoded)", mn);
         emit (indent, "buf.write(b\"\\0\")");
     } else if (!strcmp ("byte", tn)) {
@@ -380,15 +380,15 @@ _emit_encode_one (const lcmgen_t *lcm, FILE *f, lcm_struct_t *ls,
     } else if (!strcmp ("int8_t", tn) || !strcmp ("boolean", tn)) {
         emit (indent, "buf.write(struct.pack('b', %s))", accessor);
     } else if (!strcmp ("int16_t", tn)) {
-        emit (indent, "buf.write(struct.pack('>h', %s))", accessor);
+        emit (indent, "buf.write(struct.pack('<h', %s))", accessor);
     } else if (!strcmp ("int32_t", tn)) {
-        emit (indent, "buf.write(struct.pack('>i', %s))", accessor);
+        emit (indent, "buf.write(struct.pack('<i', %s))", accessor);
     } else if (!strcmp ("int64_t", tn)) {
-        emit (indent, "buf.write(struct.pack('>q', %s))", accessor);
+        emit (indent, "buf.write(struct.pack('<q', %s))", accessor);
     } else if (!strcmp ("float", tn)) {
-        emit (indent, "buf.write(struct.pack('>f', %s))", accessor);
+        emit (indent, "buf.write(struct.pack('<f', %s))", accessor);
     } else if (!strcmp ("double", tn)) {
-        emit (indent, "buf.write(struct.pack('>d', %s))", accessor);
+        emit (indent, "buf.write(struct.pack('<d', %s))", accessor);
     } else {
         const char *sn = lm->type->shortname;
         const char *gpf = "_get_packed_fingerprint()";
@@ -420,11 +420,11 @@ _emit_encode_list(const lcmgen_t *lcm, FILE *f, lcm_struct_t *ls,
                !strcmp ("float", tn) ||
                !strcmp ("double", tn)) {
         if(fixed_len) {
-            emit(indent, "buf.write(struct.pack('>%s%c', *%s[:%s]))", 
+            emit(indent, "buf.write(struct.pack('<%s%c', *%s[:%s]))", 
                     len, _struct_format(lm), accessor, len);
         } else {
             emit(indent, 
-                    "buf.write(struct.pack('>%%d%c' %% self.%s, *%s[:self.%s]))", 
+                    "buf.write(struct.pack('<%%d%c' %% self.%s, *%s[:self.%s]))", 
                     _struct_format(lm), len, accessor, len);
         }
     } else {
@@ -438,7 +438,7 @@ _flush_write_struct_fmt (FILE *f, GQueue *formats, GQueue *members)
 {
     assert (g_queue_get_length (formats) == g_queue_get_length (members));
     if (g_queue_is_empty (formats)) return;
-    emit_start (2, "buf.write(struct.pack(\">");
+    emit_start (2, "buf.write(struct.pack(\"<");
     while (! g_queue_is_empty (formats)) {
         emit_continue ("%c", GPOINTER_TO_INT (g_queue_pop_head (formats)));
     }
@@ -633,7 +633,7 @@ emit_python_fingerprint (const lcmgen_t *lcm, FILE *f, lcm_struct_t *ls)
     emit (0, "");
     emit (1, "def _get_packed_fingerprint():");
     emit (2,     "if %s._packed_fingerprint is None:", sn);
-    emit (3,         "%s._packed_fingerprint = struct.pack(\">Q\", "
+    emit (3,         "%s._packed_fingerprint = struct.pack(\"<Q\", "
             "%s._get_hash_recursive([]))", sn, sn);
     emit (2,     "return %s._packed_fingerprint", sn);
     emit (1, "_get_packed_fingerprint = staticmethod(_get_packed_fingerprint)");
@@ -844,7 +844,7 @@ emit_package (lcmgen_t *lcm, _package_contents_t *pc)
             emit(1, "%s = %i", lev->valuename, lev->value);
         }
 
-        emit (1, "_packed_fingerprint = struct.pack(\">Q\", 0x%"PRIx64")",
+        emit (1, "_packed_fingerprint = struct.pack(\"<Q\", 0x%"PRIx64")",
                 le->hash);
         fprintf (f, "\n");
 
@@ -861,11 +861,11 @@ emit_package (lcmgen_t *lcm, _package_contents_t *pc)
         fprintf (f, "\n");
 
         emit (1, "def encode(self):");
-        emit (2,     "return struct.pack(\">Qi\", 0x%"PRIx64", self.value)",
+        emit (2,     "return struct.pack(\"<Qi\", 0x%"PRIx64", self.value)",
                 le->hash);
 
         emit (1, "def _encode_one(self, buf):");
-        emit (2,     "buf.write (struct.pack(\">i\", self.value))");
+        emit (2,     "buf.write (struct.pack(\"<i\", self.value))");
         fprintf (f, "\n");
 
         emit (1, "def decode(data):");
@@ -876,12 +876,12 @@ emit_package (lcmgen_t *lcm, _package_contents_t *pc)
         emit (2,     "if buf.read(8) != %s._packed_fingerprint:", 
                 le->enumname->shortname);
         emit (3,         "raise ValueError(\"Decode error\")");
-        emit (2,     "return %s(struct.unpack(\">i\", buf.read(4))[0])",
+        emit (2,     "return %s(struct.unpack(\"<i\", buf.read(4))[0])",
                 le->enumname->shortname);
         emit (1, "decode = staticmethod(decode)");
 
         emit (1, "def _decode_one(buf):");
-        emit (2,     "return %s(struct.unpack(\">i\", buf.read(4))[0])",
+        emit (2,     "return %s(struct.unpack(\"<i\", buf.read(4))[0])",
                 le->enumname->shortname);
         emit (1, "_decode_one = staticmethod(_decode_one)");
 
