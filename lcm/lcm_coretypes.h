@@ -147,12 +147,15 @@ static inline int __int16_t_encode_array(void *_buf, int offset, int maxlen, con
     //  See Section 5.8 paragraph 3 of the standard
     //  http://open-std.org/JTC1/SC22/WG21/docs/papers/2015/n4527.pdf
     //  use uint for shifting instead if int
+    /*
     const uint16_t *unsigned_p = (uint16_t*)p;
     for (element = 0; element < elements; element++) {
         uint16_t v = unsigned_p[element];
         buf[pos++] = (v>>8) & 0xff;
         buf[pos++] = (v & 0xff);
     }
+    */
+    memcpy(&(buf[offset]), p, sizeof(int16_t)*elements);
 
     return total_size;
 }
@@ -167,10 +170,13 @@ static inline int __int16_t_decode_array(const void *_buf, int offset, int maxle
     if (maxlen < total_size)
         return -1;
 
+/*
     for (element = 0; element < elements; element++) {
         p[element] = (buf[pos]<<8) + buf[pos+1];
         pos+=2;
     }
+    */
+    memcpy(p, &(buf[offset]), sizeof(int16_t)*elements);
 
     return total_size;
 }
@@ -207,6 +213,7 @@ static inline int __int32_t_encode_array(void *_buf, int offset, int maxlen, con
     //  See Section 5.8 paragraph 3 of the standard
     //  http://open-std.org/JTC1/SC22/WG21/docs/papers/2015/n4527.pdf
     //  use uint for shifting instead if int
+    /*
     const uint32_t* unsigned_p = (uint32_t*)p;
     for (element = 0; element < elements; element++) {
         const uint32_t v = unsigned_p[element];
@@ -215,6 +222,8 @@ static inline int __int32_t_encode_array(void *_buf, int offset, int maxlen, con
         buf[pos++] = (v>>8)&0xff;
         buf[pos++] = (v & 0xff);
     }
+    */
+    memcpy(&(buf[offset]), p, sizeof(int32_t)*elements);
 
     return total_size;
 }
@@ -232,10 +241,12 @@ static inline int __int32_t_decode_array(const void *_buf, int offset, int maxle
     //  See Section 5.8 paragraph 3 of the standard
     //  http://open-std.org/JTC1/SC22/WG21/docs/papers/2015/n4527.pdf
     //  use uint for shifting instead if int
+    /*
     for (element = 0; element < elements; element++) {
         p[element] = (((uint32_t)buf[pos+0])<<24) + (((uint32_t)buf[pos+1])<<16) + (((uint32_t)buf[pos+2])<<8) + ((uint32_t)buf[pos+3]);
         pos+=4;
-    }
+    }*/
+    memcpy(p, &(buf[offset]), sizeof(int32_t)*elements);
 
     return total_size;
 }
@@ -272,7 +283,7 @@ static inline int __int64_t_encode_array(void *_buf, int offset, int maxlen, con
     //  See Section 5.8 paragraph 3 of the standard
     //  http://open-std.org/JTC1/SC22/WG21/docs/papers/2015/n4527.pdf
     //  use uint for shifting instead if int
-    const uint64_t * unsigned_p = (uint64_t*)p;
+    /*const uint64_t * unsigned_p = (uint64_t*)p;
     for (element = 0; element < elements; element++) {
         const uint64_t v = unsigned_p[element];
         buf[pos++] = (v>>56)&0xff;
@@ -283,8 +294,8 @@ static inline int __int64_t_encode_array(void *_buf, int offset, int maxlen, con
         buf[pos++] = (v>>16)&0xff;
         buf[pos++] = (v>>8)&0xff;
         buf[pos++] = (v & 0xff);
-    }
-
+    }*/
+    memcpy(&(buf[offset]), p, sizeof(int64_t)*elements);
     return total_size;
 }
 
@@ -301,13 +312,15 @@ static inline int __int64_t_decode_array(const void *_buf, int offset, int maxle
     //  See Section 5.8 paragraph 3 of the standard
     //  http://open-std.org/JTC1/SC22/WG21/docs/papers/2015/n4527.pdf
     //  use uint for shifting instead if int
+    /*
     for (element = 0; element < elements; element++) {
         uint64_t a = (((uint32_t)buf[pos+0])<<24) + (((uint32_t)buf[pos+1])<<16) + (((uint32_t)buf[pos+2])<<8) + (uint32_t)buf[pos+3];
         pos+=4;
         uint64_t b = (((uint32_t)buf[pos+0])<<24) + (((uint32_t)buf[pos+1])<<16) + (((uint32_t)buf[pos+2])<<8) + (uint32_t)buf[pos+3];
         pos+=4;
         p[element] = (a<<32) + (b&0xffffffff);
-    }
+    }*/
+    memcpy(p, &(buf[offset]), sizeof(int64_t)*elements);
 
     return total_size;
 }
